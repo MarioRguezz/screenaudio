@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <script src="//cdn.webrtc-experiment.com/getScreenId.js"></script>
+    <script src="//cdn.webrtc-experiment.com/screen.js"></script>
+    <script src="//cdn.webrtc-experiment.com/firebase.js"></script>
+      <script src="https://cdn.socket.io/socket.io-1.4.3.js"></script>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <button id="share-screen">Compartir pantalla</button>
+    <script>
+        //Variable para conectar el socket
+        var socket = io();
+
+        var screen = new Screen('screen-unique-id'); // argument is optional
+
+        // on getting local or remote streams
+        screen.onaddstream = function(e) {
+            if(document.getElementById('self')){
+                var child = document.getElementById('self')
+                document.body.removeChild(child);
+            }
+            document.body.appendChild(e.video);
+        };
+
+        // check pre-shared screens
+        // it is useful to auto-view
+        // or search pre-shared screens
+        screen.check();
+
+        document.getElementById('share-screen').onclick = function() {
+            screen.share();
+        };
+
+        screen.userid = 'username';
+
+        /*screen.openSignalingChannel = function(callback) {
+            return io.connect().on('message', callback);
+        };*/
+        screen.openSignalingChannel = function(callback) {
+            return socket.on('message', callback);
+        };
+
+        screen.onscreen = function(_screen) {
+            var li = document.createElement('li');
+            li.setAttribute('user-id', _screen.userid);
+            li.setAttribute('room-id', _screen.roomid);
+            li.onclick = function() {
+                var _screen = {
+                    userid: this.getAttribute('user-id'),
+                    roomid: this.getAttribute('room-id')
+                };
+                screen.view(_screen);
+            };
+        };
+
+    </script>
+  </body>
+</html>
